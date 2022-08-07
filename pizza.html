@@ -1,77 +1,85 @@
 <!doctype html>
 <html>
-	<head>
-		<title>PizzaMath</title>
-		<meta charset="utf-8"/>
-		<script src="https://cdn.jsdelivr.net/npm/vue@3.0.11"></script>
-	</head>
-	<body>
-		<div id="app">
-			<form>
-				<h1>BAKER</h1>
-				<label for="numberOfPizzas">Number of pizzas</label><br />
-				<input id="numberOfPizzas" type="number" step="1" min="0" v-model="numberOfPizzas" number /><br />
-				<label for="doughWeight">Dough ball weight (g, 200=small, 300=large)</label><br />
-				<input id="doughWeight" type="number" step="1" min="0" v-model="doughWeight" number /><br />
-				<label for="waterRatio">Water content (%, water/flour)</label><br />
-				<input id="waterRatio" type="number" step="1" min="50" max="120" v-model="waterRatio" number /><br />
-				<label for="saltRatio">Salt content (% of flour, neapolitan=2.5-3%)</label><br />
-				<input id="saltRatio" type="number" step="0.1" min="1" max="3" v-model="saltRatio" number /><br />
-				<label for="yeastRatio">Yeast content (% of flour, varies with T°C, timeslot and flavour expectations)</label><br />
-				<input id="yeastRatio" type="number" step="0.1" min="0.1" v-model="yeastRatio" number /><br />
-			</form>
-			<h1>HOME COOK</h1>
+
+<head>
+	<title>PizzaMath</title>
+	<meta charset="utf-8" />
+	<script src="https://cdn.jsdelivr.net/npm/vue@3.0.11"></script>
+	<!-- script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.37/vue.global.prod.min.js"></script FOR PROD-->
+</head>
+
+<body>
+	<div id="app">
+		<form>
+			<h1>BAKER</h1>
+			<label for="numberOfPizzas">Number of pizzas</label><br />
+			<input id="numberOfPizzas" type="number" step="1" min="0" v-model.number="numberOfPizzas" /><br />
+			<label for="doughWeight">Dough ball weight (g, 200=small, 300=large)</label><br />
+			<input id="doughWeight" type="number" step="1" min="0" v-model.number="doughWeight" /><br />
+			<label for="waterRatio">Water content (% of flour, water*100/flour)</label><br />
+			<input id="waterRatio" type="number" step="1" min="50" max="120" v-model.number="waterRatio" /><br />
+			<label for="saltRatio">Salt content (% of flour, neapolitan=2.5-3%)</label><br />
+			<input id="saltRatio" type="number" step="0.1" min="1" max="3" v-model.number="saltRatio" /><br />
+			<label for="yeastRatio">Yeast content (% of flour, varies with T°C, timeslot and flavour
+				expectations)</label><br />
+			<input id="yeastRatio" type="number" step="0.1" min="0.1" v-model.number="yeastRatio" /><br />
+		</form>
+		<h1>HOME COOK</h1>
+		<ul>
+			<li>Flour : {{ flourMass.toFixed(1) }} g</li>
+			<li>Water : {{ waterMass.toFixed(1) }} g</li>
+			<li>Salt : {{ saltMass.toFixed(1) }} g</li>
+			<li>Fresh yeast : {{ yeastMass.toFixed(1) }} g (half of that for dry yeast)</li>
 			<ul>
-				<li>Flour : {{ flourMass }} g</li>
-				<li>Water : {{ waterMass }} g</li>
-				<li>Salt : {{ saltMass }} g</li>
-				<li>Fresh yeast : {{ yeastMass }} g (half of that for dry yeast)</li>
-			<ul>
-		</div>
-		<script>
-			const calculate = (input) => {
-				const totalMass = input.numberOfPizzas * input.doughWeight;
-				const flourMass = totalMass / (1+input.waterRatio*0.01+input.saltRatio*0.01+input.yeastRatio*0.01);
+	</div>
+	<script>
+		const { createApp } = Vue;
+		const calculateFlourMass = (input) => {
+			const totalMass = input.numberOfPizzas * input.doughWeight; console.log(totalMass);
+			const newRatioSum = (input.waterRatio + input.saltRatio + input.yeastRatio) * 0.01;
+			console.log(input.waterRatio);console.log(typeof input.waterRatio);
+			console.log(input.saltRatio);
+			console.log(input.yeastRatio);
+			console.log(newRatioSum);
+			const flourMass = totalMass / (1 + newRatioSum); console.log(flourMass);
+			return flourMass;
+		};
+		const getMassByFlourRatio = (flourMass, ratio) => (flourMass * ratio * 0.01);
+		const updateMasses = (input) => {
+			const newFlourMass = calculateFlourMass(input);
+			input.flourMass = newFlourMass;
+			input.saltMass = getMassByFlourRatio(newFlourMass, input.saltRatio);
+			input.yeastMass = getMassByFlourRatio(newFlourMass, input.yeastRatio);
+			input.waterMass = getMassByFlourRatio(newFlourMass, input.waterRatio);
+		};
+		const initialPreferedValues = {
+			numberOfPizzas: 4,
+			doughWeight: 280,
+			waterRatio: 57,
+			saltRatio: 1.8, // (Alex=3 :O)
+			yeastRatio: 0.2,
+		};
+		const initialFlourMass = calculateFlourMass(initialPreferedValues);
+
+		createApp({
+			data() {
 				return {
-					flourMass: flourMass.toFixed(1),
-					saltMass: getMassByFlourRatio(flourMass, input.saltRatio),
-					yeastMass: getMassByFlourRatio(flourMass, input.yeastRatio),
-					waterMass: getMassByFlourRatio(flourMass, input.waterRatio),
+					...initialPreferedValues,
+					flourMass: initialFlourMass,
+					saltMass: getMassByFlourRatio(initialFlourMass, initialPreferedValues.saltRatio),
+					yeastMass: getMassByFlourRatio(initialFlourMass, initialPreferedValues.yeastRatio),
+					waterMass: getMassByFlourRatio(initialFlourMass, initialPreferedValues.waterRatio),
 				};
-			};
-			const getMassByFlourRatio = (flourMass, ratio) => (flourMass * ratio * 0.01).toFixed(1);
-			const TwoWayBinding = {
-				data() {
-					const initialPreferedValues = {
-						numberOfPizzas: 8,
-						doughWeight: 280,
-						waterRatio: 57,
-						saltRatio: 1.8, // (Alex=3)
-						yeastRatio: 0.2
-					};
-					return {
-						...initialPreferedValues,
-						...calculate(initialPreferedValues),
-					}
-				},
-				created() {
-					this.$watch(()=>[this.numberOfPizzas, this.doughWeight, this.waterRatio, this.saltRatio, this.yeastRatio], (newValues, prevValues) => {
-						const input = {
-							numberOfPizzas: newValues[0],
-							doughWeight: newValues[1],
-							waterRatio: newValues[2],
-							saltRatio: newValues[3],
-							yeastRatio: newValues[4],
-						};
-						const results = calculate(input);
-						this.flourMass = results.flourMass;
-						this.waterMass = results.waterMass;
-						this.saltMass = results.saltMass;
-						this.yeastMass = results.yeastMass;
-					})
-				}
-			};
-			Vue.createApp(TwoWayBinding).mount('#app');
-		</script>
-	</body>
+			},
+			watch: {
+				numberOfPizzas(oldValue, newValue) { updateMasses(this) },
+				doughWeight(oldValue, newValue) { updateMasses(this) },
+				waterRatio(oldValue, newValue) { updateMasses(this) },
+				saltRatio(oldValue, newValue) { updateMasses(this) },
+				yeastRatio(oldValue, newValue) { updateMasses(this) },
+			}
+		}).mount('#app')
+	</script>
+</body>
+
 </html>
