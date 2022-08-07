@@ -1,13 +1,11 @@
 <!doctype html>
 <html>
-
 <head>
 	<title>PizzaMath</title>
 	<meta charset="utf-8" />
 	<script src="https://cdn.jsdelivr.net/npm/vue@3.0.11"></script><!-- FOR DEV -->
 	<!-- script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.37/vue.global.prod.min.js"></script FOR PROD-->
 </head>
-
 <body>
 	<div id="app">
 		<form>
@@ -22,21 +20,26 @@
 
 			<h2>BAKER</h2>
 			<label for="doughWeight">Dough ball weight (g, 200=small, 300=large)</label><br />
-			<input id="doughWeight" type="number" step="1" min="0" v-model.number="doughWeight"	:disabled="!isBakerMode" /><br />
+			<input id="doughWeight" type="number" step="1" min="0" v-model.number="doughWeight"
+				:disabled="!isBakerMode" /><br />
 
 			<label for="waterRatio">Water content (% of flour, water*100/flour)</label><br />
-			<input id="waterRatio" type="number" step="1" min="50" max="120" v-model.number="waterRatio" :disabled="!isBakerMode" /><br />
+			<input id="waterRatio" type="number" step="1" min="50" max="120" v-model.number="waterRatio"
+				:disabled="!isBakerMode" /><br />
 
 			<label for="saltRatio">Salt content (% of flour, neapolitan=2.5-3%)</label><br />
-			<input id="saltRatio" type="number" step="0.1" min="1" max="3" v-model.number="saltRatio" :disabled="!isBakerMode" /><br />
+			<input id="saltRatio" type="number" step="0.1" min="1" max="3" v-model.number="saltRatio"
+				:disabled="!isBakerMode" /><br />
 
 			<label for="yeastRatio">Yeast content (% of flour, varies with T°C, timeslot and flavour
 				expectations)</label><br />
-			<input id="yeastRatio" type="number" step="0.1" min="0.1" v-model.number="yeastRatio" :disabled="!isBakerMode" /><br />
+			<input id="yeastRatio" type="number" step="0.1" min="0.1" v-model.number="yeastRatio"
+				:disabled="!isBakerMode" /><br />
 
 			<h2>HOME COOK</h2>
 			<label for="flourMass">Flour (g)</label><br />
-			<input id="flourMass" type="number" step="1" min="0" v-model.number="flourMass" :disabled="isBakerMode" /><br />
+			<input id="flourMass" type="number" step="1" min="0" v-model.number="flourMass"
+				:disabled="isBakerMode" /><br />
 
 			<label for="waterMass">Water (g)</label><br />
 			<input id="waterMass" type="number" step="1" min="0" v-model.number="waterMass"
@@ -47,7 +50,8 @@
 				:disabled="isBakerMode" /><br />
 
 			<label for="yeastMass">Fresh yeast (g, half of that for dry yeast)</label><br />
-			<input id="yeastMass" type="number" step="0.1" min="0" v-model.number="yeastMass" :disabled="isBakerMode" /><br />
+			<input id="yeastMass" type="number" step="0.1" min="0" v-model.number="yeastMass"
+				:disabled="isBakerMode" /><br />
 		</form>
 	</div>
 	<script>
@@ -103,17 +107,17 @@
 					isBakerMode: true,
 				};
 			},
-			watch: {
-				mode(oldValue, newValue) { this.isBakerMode = this.mode == 'bakerMode'; },
-				numberOfPizzas(oldValue, newValue) { updateMasses(this) },
-				doughWeight(oldValue, newValue) { if (this.isBakerMode) updateMasses(this) },
-				waterRatio(oldValue, newValue) { if (this.isBakerMode) updateMasses(this) },
-				saltRatio(oldValue, newValue) { if (this.isBakerMode) updateMasses(this) },
-				yeastRatio(oldValue, newValue) { if (this.isBakerMode) updateMasses(this) },
-				flourMass(oldValue, newValue) { if (!this.isBakerMode) updateRatios(this) },
-				saltMass(oldValue, newValue) { if (!this.isBakerMode) updateRatios(this) },
-				yeastMass(oldValue, newValue) { if (!this.isBakerMode) updateRatios(this) },
-				waterMass(oldValue, newValue) { if (!this.isBakerMode) updateRatios(this) },
+			created() {
+				this.$watch('mode', () => { this.isBakerMode = this.mode == 'bakerMode'; });
+				this.$watch('numberOfPizzas', () => { updateMasses(this); });
+				this.$watch(
+					() => [this.doughWeight, this.waterRatio, this.saltRatio, this.yeastRatio],
+					() => { if (this.isBakerMode) updateMasses(this); }
+				);
+				this.$watch(
+					() => [this.flourMass, this.saltMass, this.yeastMass, this.waterMass],
+					() => { if (!this.isBakerMode) updateRatios(this); }
+				);
 			}
 		}).mount('#app');
 	</script>
