@@ -8,22 +8,24 @@
 	<body>
 		<div id="app">
 			<form>
+				<h1>BAKER</h1>
 				<label for="numberOfPizzas">Number of pizzas</label><br />
-				<input id="numberOfPizzas" type="number" min="0" v-model="numberOfPizzas" /><br />
+				<input id="numberOfPizzas" type="number" step="1" min="0" v-model="numberOfPizzas" number /><br />
 				<label for="doughWeight">Dough ball weight (g, 200=small, 300=large)</label><br />
-				<input id="doughWeight" type="number" min="0" v-model="doughWeight" /><br />
+				<input id="doughWeight" type="number" step="1" min="0" v-model="doughWeight" number /><br />
 				<label for="waterRatio">Water content (%, water/flour)</label><br />
-				<input id="waterRatio" type="number" min="50" max="70" v-model="waterRatio" /><br />
+				<input id="waterRatio" type="number" step="1" min="50" max="120" v-model="waterRatio" number /><br />
 				<label for="saltRatio">Salt content (% of flour, neapolitan=2.5-3%)</label><br />
-				<input id="saltRatio" type="number" step="0.1" min="1" max="3" v-model="saltRatio" /><br />
+				<input id="saltRatio" type="number" step="0.1" min="1" max="3" v-model="saltRatio" number /><br />
 				<label for="yeastRatio">Yeast content (% of flour, varies with T°C, timeslot and flavour expectations)</label><br />
-				<input id="yeastRatio" type="number" step="0.1" min="0.1" v-model="yeastRatio" /><br />
+				<input id="yeastRatio" type="number" step="0.1" min="0.1" v-model="yeastRatio" number /><br />
 			</form>
+			<h1>HOME COOK</h1>
 			<ul>
-				<li>Flour : {{ parseFloat(flourMass).toFixed(1) }} g</li>
-				<li>Water : {{ parseFloat(waterMass).toFixed(1) }} g</li>
-				<li>Salt : {{ parseFloat(saltMass).toFixed(1) }} g</li>
-				<li>Fresh yeast : {{ parseFloat(yeastMass).toFixed(1) }} g (half of that for dry yeast)</li>
+				<li>Flour : {{ flourMass }} g</li>
+				<li>Water : {{ waterMass }} g</li>
+				<li>Salt : {{ saltMass }} g</li>
+				<li>Fresh yeast : {{ yeastMass }} g (half of that for dry yeast)</li>
 			<ul>
 		</div>
 		<script>
@@ -31,34 +33,35 @@
 				const totalMass = input.numberOfPizzas * input.doughWeight;
 				const flourMass = totalMass / (1+input.waterRatio*0.01+input.saltRatio*0.01+input.yeastRatio*0.01);
 				return {
-					flourMass,
-					saltMass: flourMass * input.saltRatio * 0.01,
-					yeastMass: flourMass * input.yeastRatio * 0.01,
-					waterMass: flourMass * input.waterRatio * 0.01,
+					flourMass: flourMass.toFixed(1),
+					saltMass: getMassByFlourRatio(flourMass, input.saltRatio),
+					yeastMass: getMassByFlourRatio(flourMass, input.yeastRatio),
+					waterMass: getMassByFlourRatio(flourMass, input.waterRatio),
 				};
 			};
+			const getMassByFlourRatio = (flourMass, ratio) => (flourMass * ratio * 0.01).toFixed(1);
 			const TwoWayBinding = {
 				data() {
-					const initialValues = {
+					const initialPreferedValues = {
 						numberOfPizzas: 8,
 						doughWeight: 280,
 						waterRatio: 57,
-						saltRatio: 2.2, // 2.5-3 (Alex=3)
+						saltRatio: 1.8, // (Alex=3)
 						yeastRatio: 0.2
 					};
 					return {
-						...initialValues,
-						...calculate(initialValues),
+						...initialPreferedValues,
+						...calculate(initialPreferedValues),
 					}
 				},
 				created() {
 					this.$watch(()=>[this.numberOfPizzas, this.doughWeight, this.waterRatio, this.saltRatio, this.yeastRatio], (newValues, prevValues) => {
 						const input = {
-							numberOfPizzas: parseInt(newValues[0]),
-							doughWeight: parseInt(newValues[1]),
-							waterRatio: parseInt(newValues[2]),
-							saltRatio: parseFloat(newValues[3]),
-							yeastRatio: parseFloat(newValues[4]),
+							numberOfPizzas: newValues[0],
+							doughWeight: newValues[1],
+							waterRatio: newValues[2],
+							saltRatio: newValues[3],
+							yeastRatio: newValues[4],
 						};
 						const results = calculate(input);
 						this.flourMass = results.flourMass;
