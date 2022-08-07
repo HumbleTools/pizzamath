@@ -4,53 +4,83 @@
 <head>
 	<title>PizzaMath</title>
 	<meta charset="utf-8" />
-	<script src="https://cdn.jsdelivr.net/npm/vue@3.0.11"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue@3.0.11"></script><!-- FOR DEV -->
 	<!-- script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.37/vue.global.prod.min.js"></script FOR PROD-->
 </head>
 
 <body>
 	<div id="app">
 		<form>
-			<h1>BAKER</h1>
-			<label for="numberOfPizzas">Number of pizzas</label><br />
-			<input id="numberOfPizzas" type="number" step="1" min="0" v-model.number="numberOfPizzas" /><br />
+			<h1>BREAD RECIPE CONVERTER</h1>
+			<label for="numberOfPizzas">Number of dough balls</label><br />
+			<input id="numberOfPizzas" type="number" step="1" min="0" v-model.number="numberOfPizzas" /><br /><br />
+
+			<input type="radio" id="bakerMode" value="bakerMode" v-model="mode" />
+			<label for="bakerMode">Baker mode (flour %)</label><br />
+			<input type="radio" id="homeCookMode" value="homeCookMode" v-model="mode" />
+			<label for="homeCookMode">Home cook mode (grams)</label>
+
+			<h2>BAKER</h2>
 			<label for="doughWeight">Dough ball weight (g, 200=small, 300=large)</label><br />
-			<input id="doughWeight" type="number" step="1" min="0" v-model.number="doughWeight" /><br />
+			<input id="doughWeight" type="number" step="1" min="0" v-model.number="doughWeight"	:disabled="!isBakerMode" /><br />
+
 			<label for="waterRatio">Water content (% of flour, water*100/flour)</label><br />
-			<input id="waterRatio" type="number" step="1" min="50" max="120" v-model.number="waterRatio" /><br />
+			<input id="waterRatio" type="number" step="1" min="50" max="120" v-model.number="waterRatio" :disabled="!isBakerMode" /><br />
+
 			<label for="saltRatio">Salt content (% of flour, neapolitan=2.5-3%)</label><br />
-			<input id="saltRatio" type="number" step="0.1" min="1" max="3" v-model.number="saltRatio" /><br />
+			<input id="saltRatio" type="number" step="0.1" min="1" max="3" v-model.number="saltRatio" :disabled="!isBakerMode" /><br />
+
 			<label for="yeastRatio">Yeast content (% of flour, varies with T°C, timeslot and flavour
 				expectations)</label><br />
-			<input id="yeastRatio" type="number" step="0.1" min="0.1" v-model.number="yeastRatio" /><br />
+			<input id="yeastRatio" type="number" step="0.1" min="0.1" v-model.number="yeastRatio" :disabled="!isBakerMode" /><br />
+
+			<h2>HOME COOK</h2>
+			<label for="flourMass">Flour (g)</label><br />
+			<input id="flourMass" type="number" step="1" min="0" v-model.number="flourMass" :disabled="isBakerMode" /><br />
+
+			<label for="waterMass">Water (g)</label><br />
+			<input id="waterMass" type="number" step="1" min="0" v-model.number="waterMass"
+				:disabled="isBakerMode" /><br />
+
+			<label for="saltMass">Salt (g)</label><br />
+			<input id="saltMass" type="number" step="0.1" min="0" v-model.number="saltMass"
+				:disabled="isBakerMode" /><br />
+
+			<label for="yeastMass">Fresh yeast (g, half of that for dry yeast)</label><br />
+			<input id="yeastMass" type="number" step="0.1" min="0" v-model.number="yeastMass" :disabled="isBakerMode" /><br />
 		</form>
-		<h1>HOME COOK</h1>
-		<ul>
-			<li>Flour : {{ flourMass.toFixed(1) }} g</li>
-			<li>Water : {{ waterMass.toFixed(1) }} g</li>
-			<li>Salt : {{ saltMass.toFixed(1) }} g</li>
-			<li>Fresh yeast : {{ yeastMass.toFixed(1) }} g (half of that for dry yeast)</li>
-			<ul>
 	</div>
 	<script>
 		const { createApp } = Vue;
+		const isHomeCookMode = (mode) => mode == 'homeCookMode';
+		const isBakerMode = (mode) => mode == 'bakerMode';
+		const round = (places) => (num) => {
+			const order = places === 0 ? 1 : 10;
+			return Math.round((num + Number.EPSILON) * order) / order;
+		};
 		const calculateFlourMass = (input) => {
-			const totalMass = input.numberOfPizzas * input.doughWeight; console.log(totalMass);
+			const totalMass = input.numberOfPizzas * input.doughWeight;
 			const newRatioSum = (input.waterRatio + input.saltRatio + input.yeastRatio) * 0.01;
-			console.log(input.waterRatio);console.log(typeof input.waterRatio);
-			console.log(input.saltRatio);
-			console.log(input.yeastRatio);
-			console.log(newRatioSum);
-			const flourMass = totalMass / (1 + newRatioSum); console.log(flourMass);
+			const flourMass = totalMass / (1 + newRatioSum);
 			return flourMass;
 		};
 		const getMassByFlourRatio = (flourMass, ratio) => (flourMass * ratio * 0.01);
+		const getRatioByFlourMass = (flourMass, mass) => (mass * 100 / flourMass);
 		const updateMasses = (input) => {
 			const newFlourMass = calculateFlourMass(input);
-			input.flourMass = newFlourMass;
-			input.saltMass = getMassByFlourRatio(newFlourMass, input.saltRatio);
-			input.yeastMass = getMassByFlourRatio(newFlourMass, input.yeastRatio);
-			input.waterMass = getMassByFlourRatio(newFlourMass, input.waterRatio);
+			input.flourMass = round(0)(newFlourMass);
+			input.saltMass = round(1)(getMassByFlourRatio(newFlourMass, input.saltRatio));
+			input.yeastMass = round(1)(getMassByFlourRatio(newFlourMass, input.yeastRatio));
+			input.waterMass = round(0)(getMassByFlourRatio(newFlourMass, input.waterRatio));
+		};
+		const updateRatios = (input) => {
+			input.waterRatio = round(0)(getRatioByFlourMass(input.flourMass, input.waterMass));
+			input.saltRatio = round(1)(getRatioByFlourMass(input.flourMass, input.saltMass));
+			input.yeastRatio = round(1)(getRatioByFlourMass(input.flourMass, input.yeastMass));
+			input.doughWeight = round(0)(getDoughWeight(input));
+		};
+		const getDoughWeight = (input) => {
+			return (input.flourMass + input.saltMass + input.yeastMass + input.waterMass) / input.numberOfPizzas;
 		};
 		const initialPreferedValues = {
 			numberOfPizzas: 4,
@@ -65,21 +95,27 @@
 			data() {
 				return {
 					...initialPreferedValues,
-					flourMass: initialFlourMass,
-					saltMass: getMassByFlourRatio(initialFlourMass, initialPreferedValues.saltRatio),
-					yeastMass: getMassByFlourRatio(initialFlourMass, initialPreferedValues.yeastRatio),
-					waterMass: getMassByFlourRatio(initialFlourMass, initialPreferedValues.waterRatio),
+					flourMass: round(0)(initialFlourMass),
+					saltMass: round(1)(getMassByFlourRatio(initialFlourMass, initialPreferedValues.saltRatio)),
+					yeastMass: round(1)(getMassByFlourRatio(initialFlourMass, initialPreferedValues.yeastRatio)),
+					waterMass: round(0)(getMassByFlourRatio(initialFlourMass, initialPreferedValues.waterRatio)),
+					mode: 'bakerMode',
+					isBakerMode: true,
 				};
 			},
 			watch: {
+				mode(oldValue, newValue) { this.isBakerMode = this.mode == 'bakerMode'; },
 				numberOfPizzas(oldValue, newValue) { updateMasses(this) },
-				doughWeight(oldValue, newValue) { updateMasses(this) },
-				waterRatio(oldValue, newValue) { updateMasses(this) },
-				saltRatio(oldValue, newValue) { updateMasses(this) },
-				yeastRatio(oldValue, newValue) { updateMasses(this) },
+				doughWeight(oldValue, newValue) { if (this.isBakerMode) updateMasses(this) },
+				waterRatio(oldValue, newValue) { if (this.isBakerMode) updateMasses(this) },
+				saltRatio(oldValue, newValue) { if (this.isBakerMode) updateMasses(this) },
+				yeastRatio(oldValue, newValue) { if (this.isBakerMode) updateMasses(this) },
+				flourMass(oldValue, newValue) { if (!this.isBakerMode) updateRatios(this) },
+				saltMass(oldValue, newValue) { if (!this.isBakerMode) updateRatios(this) },
+				yeastMass(oldValue, newValue) { if (!this.isBakerMode) updateRatios(this) },
+				waterMass(oldValue, newValue) { if (!this.isBakerMode) updateRatios(this) },
 			}
-		}).mount('#app')
+		}).mount('#app');
 	</script>
 </body>
-
 </html>
